@@ -1,0 +1,8 @@
+{
+  "name": "com.game.tool.assetview",
+  "displayName": "Game_Tool_AsssetView",
+  "version": "1.0.0",
+  "unity": "2021.2",
+  "description": "\u8d44\u6e90\u68c0\u6d4b\u6a21\u5757",
+  "icon": ".icon.png"
+}
