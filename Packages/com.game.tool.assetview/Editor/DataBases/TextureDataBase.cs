@@ -28,8 +28,9 @@ namespace Game.Tool.AssetView
 
             switch (sortType)
             {
-                case PropCols.FileName: return Path.GetFileName(data.assetPath);
+                // case PropCols.FileName: return Path.GetFileName(data.assetPath);
                 case PropCols.Path: return data.assetPath;
+                case PropCols.FileExtension: return Path.GetExtension(data.assetPath);
                 case PropCols.CompressSize: return EditorUtility.FormatBytes(data.CompressSize);
                 case PropCols.Size: return $"x{data.Size}";
                 case PropCols.MobileSize: return $"x{data.MobileSize}";
@@ -63,8 +64,9 @@ namespace Game.Tool.AssetView
 
             switch (sortType)
             {
-                case PropCols.FileName:
+                // case PropCols.FileName:
                 case PropCols.Path: return data1.assetPath.CompareTo(data2.assetPath);
+                case PropCols.FileExtension: return Path.GetExtension(data1.assetPath).CompareTo(Path.GetExtension(data2.assetPath));
                 case PropCols.CompressSize: return data1.CompressSize.CompareTo(data2.CompressSize);
                 case PropCols.Size: return data1.Size.CompareTo(data2.Size);
                 case PropCols.MobileSize: return data1.MobileSize.CompareTo(data2.MobileSize);
@@ -88,8 +90,9 @@ namespace Game.Tool.AssetView
         {
             var columns = new[]
             {
-                new Column { headerContent = EditorGUIUtility.TrTextContent("文件名"),                              width = 100,  autoResize = false,  allowToggleVisibility = false,   },
+                // new Column { headerContent = EditorGUIUtility.TrTextContent("文件名"),                              width = 100,  autoResize = false,  allowToggleVisibility = false,   },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("路径"),                                minWidth = 100, autoResize = true,  headerTextAlignment = TextAlignment.Right, },
+                new Column { headerContent = EditorGUIUtility.TrTextContent("后缀"),                                width = 60,     autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("CompressSize(KB)"),                    width = 120,    autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("尺寸"),                                width = 60,     autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("移动端尺寸"),                         width = 60,     autoResize = false, },
@@ -139,7 +142,12 @@ namespace Game.Tool.AssetView
 
             Texture2D obj = AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
 
-            if (obj == null) { return default; }
+            if (obj == null)
+            {
+                Data _data = default;
+                _data.assetPath = assetPath;
+                return _data;
+            }
 
             var iPhoneTextureSettings = importer.GetPlatformTextureSettings("iPhone");
             var androidTextureSettings = importer.GetPlatformTextureSettings("Android");
@@ -166,8 +174,9 @@ namespace Game.Tool.AssetView
 
         enum PropCols
         {
-            FileName,
+            // FileName,
             Path,
+            FileExtension,
             CompressSize,
             Size,
             MobileSize,

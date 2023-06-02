@@ -9,6 +9,7 @@ namespace Game.Tool.AssetView
         GUIContent titleContent { get; }
         string advanceFilter { get; }
         string[] path { get; }
+        bool reverseSearch { get; }
 
 
     }

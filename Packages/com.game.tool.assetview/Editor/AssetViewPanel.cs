@@ -25,6 +25,9 @@ namespace Game.Tool.AssetView
         SearchField m_SearchField = null;
         int m_Index = -1;
         int m_FilterIndex = -1;
+        Object m_SelectedObject = null;
+        string m_FilterString;
+        bool m_ReverseSerach = false;
 
         private void OnEnable()
         {
@@ -99,6 +102,7 @@ namespace Game.Tool.AssetView
                     if (EditorGUI.DropdownButton(fileRect, Style.FileMenuName, FocusType.Passive, EditorStyles.toolbarButton))
                     {
                         data.Clear();
+                        m_View.multiColumnHeader.sortedColumnIndex = -1;
                         m_View.SetData(data, AssetViewToolSettings.instance.assetPaths);
                     }
 
@@ -118,11 +122,6 @@ namespace Game.Tool.AssetView
                 var count = AssetViewToolSettings._cacheFilterRuleTypesList.Count;
                 for (int i = 0; i < count; i++)
                 {
-                    if (m_FilterIndex < 0)
-                    {
-                        m_FilterIndex = i;
-                    }
-
                     var type = AssetViewToolSettings._cacheFilterRuleTypesList[i];
 
                     var filterRule = AssetViewToolSettings.GetFilterRuleInstance(type.Name);
@@ -133,17 +132,34 @@ namespace Game.Tool.AssetView
                     if (EditorGUILayout.DropdownButton(filterRule.titleContent, FocusType.Passive, EditorStyles.toolbarButton))
                     {
                         m_FilterIndex = i;
-                        m_View.SetData(dataBase, filterRule.path, filterRule.advanceFilter);
+                        m_View.multiColumnHeader.sortedColumnIndex = -1;
+
+                        string[] assetPaths = filterRule.path;
+
+                        if (m_SelectedObject != null)
+                            assetPaths = new string[] { AssetDatabase.GetAssetPath(m_SelectedObject) };
+
+                        m_View.SetData(dataBase, assetPaths, filterRule.reverseSearch, filterRule.advanceFilter);
                     }
                     GUI.color = oldColor;
                 }
 
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("自定义搜索:");
+                m_SelectedObject = EditorGUILayout.ObjectField(new GUIContent(), m_SelectedObject, typeof(Object), false, new GUILayoutOption[] { GUILayout.Width(100f) });
+                m_FilterString = EditorGUILayout.TextField(m_FilterString);
+                m_ReverseSerach = EditorGUILayout.Toggle(m_ReverseSerach, new GUILayoutOption[] { GUILayout.Width(30f) });
+                GUIContent search = new GUIContent("搜索");
+                if (EditorGUILayout.DropdownButton(search, FocusType.Passive, EditorStyles.toolbarButton))
+                {
+                    m_FilterIndex = -1;
+                    string path = "Assets/";
+                    if (m_SelectedObject != null)
+                        path = AssetDatabase.GetAssetPath(m_SelectedObject);
 
-
-                // content = EditorGUIUtility.TrTextContent("问题5");
-                // if (EditorGUILayout.DropdownButton(content, FocusType.Passive, EditorStyles.toolbarButton))
-                // {
-                // }
+                    string[] assetPaths = new string[] { path };
+                    m_View.SetData(dataBase, assetPaths, m_ReverseSerach, m_FilterString);
+                }
 
                 GUILayout.FlexibleSpace();
                 GUILayout.FlexibleSpace();

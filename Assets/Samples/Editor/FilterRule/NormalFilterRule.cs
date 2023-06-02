@@ -17,5 +17,7 @@ namespace Inutan.InutanEditor
 
         private string[] m_Path = new string[] { SceneRootPath };
         private string m_AdvanceFilter = "glob:\"(**_N.*|**_Normal.*)\"";
+
+        public bool reverseSearch => false;
     }
 }

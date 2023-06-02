@@ -48,6 +48,7 @@ namespace Game.Tool.AssetView
 
         string[] m_AssetPaths;
         string m_AdvanceFilter = "";
+        bool m_ReverseSerach = false;
         IDataBase m_DataBase;
 
         //当前选择的Item
@@ -79,11 +80,13 @@ namespace Game.Tool.AssetView
         /// <summary>
         /// 设置数据
         /// </summary>
-        public void SetData(IDataBase dataBase, string[] assetPaths, string filter = "")
+        public void SetData(IDataBase dataBase, string[] assetPaths, bool reverse = false, string filter = "")
         {
+            m_DataBase?.Clear();
             m_DataBase = dataBase;
             m_AssetPaths = assetPaths;
             m_AdvanceFilter = filter;
+            m_ReverseSerach = reverse;
             if (m_AssetPaths == null)
             {
                 m_AssetPaths = new string[] { "Assets/" };
@@ -104,11 +107,33 @@ namespace Game.Tool.AssetView
             }
 
             string[] guids = AssetDatabase.FindAssets(m_DataBase.filter + " " + m_AdvanceFilter, m_AssetPaths);
+            List<string> finalGuidsList = new List<string>();
+
+            //反选搜索
+            if (m_ReverseSerach)
+            {
+                string[] guidsNoFilter = AssetDatabase.FindAssets(m_DataBase.filter, m_AssetPaths);
+
+                List<string> guidsList = new List<string>(guids);
+                List<string> guidsNoFilterList = new List<string>(guidsNoFilter);
+
+                //在guidsNoFilter 而不在guids
+                foreach (var item in guidsNoFilterList)
+                {
+                    if (guidsList.Contains(item)) continue;
+                    finalGuidsList.Add(item);
+                }
+            }
+            else
+            {
+                finalGuidsList.AddRange(guids);
+            }
+
 
             // 更新数据
-            for (int i = 0; i < guids.Length; i++)
+            for (int i = 0; i < finalGuidsList.Count; i++)
             {
-                var guid = guids[i];
+                var guid = finalGuidsList[i];
 
                 if (guid == null)
                 {

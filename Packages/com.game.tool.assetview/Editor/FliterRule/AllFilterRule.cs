@@ -14,5 +14,7 @@ namespace Game.Tool.AssetView
 
         public string advanceFilter => m_AdvanceFilter;
         private string m_AdvanceFilter = "";
+
+        public bool reverseSearch => false;
     }
 }
