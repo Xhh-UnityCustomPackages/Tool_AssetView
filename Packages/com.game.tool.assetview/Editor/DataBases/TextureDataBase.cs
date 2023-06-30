@@ -41,7 +41,8 @@ namespace Game.Tool.AssetView
                 // case PropCols.AlphaSource: return data.AlphaSource.ToString();
                 case PropCols.sRGB: return data.sRGB.ToString();
                 case PropCols.Read_Write: return data.Read_Write.ToString();
-                case PropCols.CenerateMipMaps: return data.GenerateMipMaps.ToString();
+                case PropCols.GenerateMipMaps: return data.GenerateMipMaps.ToString();
+                case PropCols.StreamingMipMaps: return data.StreamingMipMaps.ToString();
                 // case PropCols.WrapMode: return data.WrapMode.ToString();
                 default: return "None";
             }
@@ -77,7 +78,8 @@ namespace Game.Tool.AssetView
                 // case PropCols.AlphaSource: return data1.AlphaSource.CompareTo(data2.AlphaSource);
                 case PropCols.sRGB: return data1.sRGB.CompareTo(data2.sRGB);
                 case PropCols.Read_Write: return data1.Read_Write.CompareTo(data2.Read_Write);
-                case PropCols.CenerateMipMaps: return data1.GenerateMipMaps.CompareTo(data2.GenerateMipMaps);
+                case PropCols.GenerateMipMaps: return data1.GenerateMipMaps.CompareTo(data2.GenerateMipMaps);
+                case PropCols.StreamingMipMaps: return data1.StreamingMipMaps.CompareTo(data2.StreamingMipMaps);
                 // case PropCols.WrapMode: return data1.WrapMode.CompareTo(data2.WrapMode);
                 default: return 0;
             }
@@ -104,6 +106,7 @@ namespace Game.Tool.AssetView
                 new Column { headerContent = EditorGUIUtility.TrTextContent("sRGB"),                                width = 70,     autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("R|W"),                          width = 40,     autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("MipMaps"),                             width = 40,    autoResize = false, },
+                new Column { headerContent = EditorGUIUtility.TrTextContent("StreamingMipMaps"),                    width = 40,    autoResize = false, },
                 // new Column { headerContent = EditorGUIUtility.TrTextContent("WrapMode"),                            width = 100,    autoResize = false, },
             };
 
@@ -166,6 +169,7 @@ namespace Game.Tool.AssetView
             textureData.sRGB = importer.sRGBTexture;
             textureData.Read_Write = importer.isReadable;
             textureData.GenerateMipMaps = importer.mipmapEnabled;
+            textureData.StreamingMipMaps = importer.streamingMipmaps;
             // textureData.WrapMode = importer.wrapMode;
 
             m_DataMap[guid] = textureData;
@@ -187,7 +191,8 @@ namespace Game.Tool.AssetView
             // AlphaSource,
             sRGB,
             Read_Write,
-            CenerateMipMaps,
+            GenerateMipMaps,
+            StreamingMipMaps,
             // WrapMode,
         }
 
@@ -205,6 +210,7 @@ namespace Game.Tool.AssetView
             public bool sRGB;
             public bool Read_Write;
             public bool GenerateMipMaps;
+            public bool StreamingMipMaps;
             // public TextureWrapMode WrapMode;
         }
 
@@ -344,7 +350,7 @@ namespace Game.Tool.AssetView
                         AddsRGBGenericMenu(menu, false);
                         return menu;
                     }
-                case PropCols.CenerateMipMaps:
+                case PropCols.GenerateMipMaps:
                     {
                         void AddGenerateMipMapsGenericMenu(GenericMenu menu, bool enable)
                         {
@@ -376,6 +382,41 @@ namespace Game.Tool.AssetView
                         GenericMenu menu = new GenericMenu();
                         AddGenerateMipMapsGenericMenu(menu, true);
                         AddGenerateMipMapsGenericMenu(menu, false);
+                        return menu;
+                    }
+
+                case PropCols.StreamingMipMaps:
+                    {
+                        void AddStreamingMipMapsGenericMenu(GenericMenu menu, bool enable)
+                        {
+                            void ChangesGenerateMipMaps(bool enable)
+                            {
+                                void Do(string path)
+                                {
+                                    var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                                    if (importer == null) return;
+
+                                    importer.streamingMipmaps = enable;
+                                    importer.SaveAndReimport();
+
+                                    var guid = AssetDatabase.AssetPathToGUID(path);
+                                    m_DataMap.TryGetValue(guid, out Data data);
+                                    data.StreamingMipMaps = enable;
+                                    m_DataMap[guid] = data;
+                                };
+
+                                foreach (var treeItem in AssetView.SelectedItems)
+                                    Do(treeItem);
+
+                                AssetDatabase.Refresh();
+                            }
+
+                            menu.AddItem(new GUIContent(enable.ToString()), false, () => { ChangesGenerateMipMaps(enable); });
+                        }
+
+                        GenericMenu menu = new GenericMenu();
+                        AddStreamingMipMapsGenericMenu(menu, true);
+                        AddStreamingMipMapsGenericMenu(menu, false);
                         return menu;
                     }
 

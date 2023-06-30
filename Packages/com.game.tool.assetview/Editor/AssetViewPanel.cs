@@ -6,6 +6,15 @@ using static UnityEditor.IMGUI.Controls.TreeView;
 
 namespace Game.Tool.AssetView
 {
+    public enum DataBaseType
+    {
+        None = -1,
+        Texture,
+        Model,
+        Audio,
+        Shader,
+    }
+
     internal partial class AssetViewPanel : EditorWindow
     {
 
@@ -20,6 +29,7 @@ namespace Game.Tool.AssetView
         }
 
         // string[] m_AssetPaths = new string[] { "Assets/Development/", ResManager.RootPath, "Assets/ResAssets", "Assets/Scenes/" };
+
         List<IDataBase> m_DataBases = new List<IDataBase>() { new TextureDataBase(), new ModelDataBase(), new AudioDataBase(), new ShaderDataBase() };
         AssetView m_View;
         SearchField m_SearchField = null;
@@ -46,12 +56,56 @@ namespace Game.Tool.AssetView
             Rect viewRect = GUILayoutUtility.GetRect(Style.SearchContent, EditorStyles.textArea, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             m_View.OnGUI(viewRect);
 
+            //自定义功能区
+            bool hasCustomFunction = false;
+            var functionList = AssetViewToolSettings._cacheFunctionTypesList;
+            for (int i = 0; i < functionList.Count; i++)
+            {
+                var type = functionList[i];
+
+                var function = AssetViewToolSettings.GetFunctionInstance(type.Name);
+                if (!function.enable) continue;
+                if (!function.CanShow((DataBaseType)m_Index)) continue;
+
+                hasCustomFunction = true;
+                break;
+            }
+
+            if (hasCustomFunction)
+            {
+                Color oldGUIColor = GUI.color;
+                GUI.color = Color.cyan;
+                using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+                {
+                    for (int i = 0; i < functionList.Count; i++)
+                    {
+                        var type = functionList[i];
+
+                        var function = AssetViewToolSettings.GetFunctionInstance(type.Name);
+                        if (!function.enable) continue;
+                        if (!function.CanShow((DataBaseType)m_Index)) continue;
+
+                        if (EditorGUILayout.DropdownButton(function.titleContent, FocusType.Passive, EditorStyles.toolbarButton))
+                        {
+                            function.DoCustomFunction(m_View.finalGuidsList);
+                            dataBase.Clear();
+                            m_View.multiColumnHeader.sortedColumnIndex = -1;
+                            m_View.SetData(dataBase, AssetViewToolSettings.instance.assetPaths);
+                        }
+                    }
+
+                    GUILayout.FlexibleSpace();
+                }
+                GUI.color = oldGUIColor;
+            }
+
             // 状态栏
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
             {
                 GUILayout.FlexibleSpace();
                 var content = EditorGUIUtility.TrTextContent($"数量:{dataBase.GetCount()}");
                 EditorGUILayout.DropdownButton(content, FocusType.Passive, EditorStyles.toolbarButton, GUILayout.MinWidth(100f));
+
             }
         }
 

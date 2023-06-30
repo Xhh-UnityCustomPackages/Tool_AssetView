@@ -53,6 +53,9 @@ namespace Game.Tool.AssetView
 
         //当前选择的Item
         public static List<string> SelectedItems = new List<string>();
+        private List<string> m_FinalGuidsList = new List<string>();
+
+        public List<string> finalGuidsList => m_FinalGuidsList;
 
         #region Unity Pool
         static GUIDItem CreateGUIDItem()
@@ -82,6 +85,7 @@ namespace Game.Tool.AssetView
         /// </summary>
         public void SetData(IDataBase dataBase, string[] assetPaths, bool reverse = false, string filter = "")
         {
+            m_FinalGuidsList?.Clear();
             m_DataBase?.Clear();
             m_DataBase = dataBase;
             m_AssetPaths = assetPaths;
@@ -107,7 +111,7 @@ namespace Game.Tool.AssetView
             }
 
             string[] guids = AssetDatabase.FindAssets(m_DataBase.filter + " " + m_AdvanceFilter, m_AssetPaths);
-            List<string> finalGuidsList = new List<string>();
+            m_FinalGuidsList = new List<string>();
 
             //反选搜索
             if (m_ReverseSerach)
@@ -121,19 +125,19 @@ namespace Game.Tool.AssetView
                 foreach (var item in guidsNoFilterList)
                 {
                     if (guidsList.Contains(item)) continue;
-                    finalGuidsList.Add(item);
+                    m_FinalGuidsList.Add(item);
                 }
             }
             else
             {
-                finalGuidsList.AddRange(guids);
+                m_FinalGuidsList.AddRange(guids);
             }
 
 
             // 更新数据
-            for (int i = 0; i < finalGuidsList.Count; i++)
+            for (int i = 0; i < m_FinalGuidsList.Count; i++)
             {
-                var guid = finalGuidsList[i];
+                var guid = m_FinalGuidsList[i];
 
                 if (guid == null)
                 {
