@@ -22,7 +22,7 @@ namespace Game.Tool.AssetView
         /// </summary>
         public string GetColumnInfos(string guid, int column)
         {
-            Data data = GetTextureData(guid);
+            Data data = GetModelData(guid);
             var sortType = (PropCols)column;
 
             switch (sortType)
@@ -39,12 +39,15 @@ namespace Game.Tool.AssetView
                 case PropCols.TriCount: return data.TriCount.ToString();
                 case PropCols.SkinCount: return data.SkinCount.ToString();
                 case PropCols.BoneCount: return data.BoneCount.ToString();
+                case PropCols.ImportAnimation: return data.ImportAnimation.ToString();
                 case PropCols.AnimationType: return data.AnimationType.ToString();
+                case PropCols.StripBones: return data.StripBones.ToString();
                 case PropCols.OptimizeGameObjects: return data.OptimizeGameObjects.ToString();
                 case PropCols.AnimCompression: return data.AnimCompression.ToString();
                 case PropCols.AnimationClipLength: return data.AnimationClipLength.ToString();
                 case PropCols.IsLoop: return data.IsLoop ? "Loop" : string.Empty;
                 case PropCols.AnimationClipSize: return EditorUtility.FormatBytes(data.AnimationClipSize);
+                case PropCols.MaterialImportMode: return data.MaterialImportMode.ToString();
                 default: return string.Empty;
             }
         }
@@ -54,8 +57,8 @@ namespace Game.Tool.AssetView
         /// </summary>
         public int Sort(string guid1, string guid2, bool ascending, int sortedColumnIndex)
         {
-            var data1 = GetTextureData(ascending ? guid1 : guid2);
-            var data2 = GetTextureData(ascending ? guid2 : guid1);
+            var data1 = GetModelData(ascending ? guid1 : guid2);
+            var data2 = GetModelData(ascending ? guid2 : guid1);
 
             if (string.IsNullOrEmpty(data1.assetPath) || string.IsNullOrEmpty(data2.assetPath))
             {
@@ -78,12 +81,15 @@ namespace Game.Tool.AssetView
                 case PropCols.TriCount: return data1.TriCount.CompareTo(data2.TriCount);
                 case PropCols.SkinCount: return data1.SkinCount.CompareTo(data2.SkinCount);
                 case PropCols.BoneCount: return data1.BoneCount.CompareTo(data2.BoneCount);
+                case PropCols.StripBones: return data1.StripBones.CompareTo(data2.StripBones);
+                case PropCols.ImportAnimation: return data1.ImportAnimation.CompareTo(data2.ImportAnimation);
                 case PropCols.AnimationType: return data1.AnimationType.CompareTo(data2.AnimationType);
                 case PropCols.OptimizeGameObjects: return data1.OptimizeGameObjects.CompareTo(data2.OptimizeGameObjects);
                 case PropCols.AnimCompression: return data1.AnimCompression.CompareTo(data2.AnimCompression);
                 case PropCols.AnimationClipLength: return data1.AnimationClipLength.CompareTo(data2.AnimationClipLength);
                 case PropCols.IsLoop: return data1.IsLoop.CompareTo(data2.IsLoop);
                 case PropCols.AnimationClipSize: return data1.AnimationClipSize.CompareTo(data2.AnimationClipSize);
+                case PropCols.MaterialImportMode: return data1.MaterialImportMode.CompareTo(data2.MaterialImportMode);
                 default: return 0;
             }
         }
@@ -105,14 +111,17 @@ namespace Game.Tool.AssetView
                 new Column { headerContent = EditorGUIUtility.TrTextContent("MeshCount"), width = 80, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("顶点数"), width = 50, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("面数量"), width = 50, autoResize = false, },
+                new Column { headerContent = EditorGUIUtility.TrTextContent("StripBones"), width = 100, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("蒙皮数"), width = 50, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("骨骼数"), width = 50, autoResize = false, },
+                new Column { headerContent = EditorGUIUtility.TrTextContent("ImportAnimation"), width = 100, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("AnimationType"), width = 100, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("OptimizeGameObjects"), width = 130, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("Anim.Compression"), width = 120, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("动作时长"), width = 80, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("循环"), width = 40, autoResize = false, },
                 new Column { headerContent = EditorGUIUtility.TrTextContent("动作大小"), width = 60, autoResize = false, },
+                new Column { headerContent = EditorGUIUtility.TrTextContent("材质导入模式"), width = 60, autoResize = false, },
             };
 
             Assert.AreEqual(columns.Length, Enum.GetValues(typeof(PropCols)).Length, "列数和枚举数量必须一致");
@@ -122,7 +131,7 @@ namespace Game.Tool.AssetView
             return multiColumnHeader;
         }
 
-        Data GetTextureData(string guid)
+        Data GetModelData(string guid)
         {
             if (m_DataMap.TryGetValue(guid, out Data data))
             {
@@ -153,12 +162,15 @@ namespace Game.Tool.AssetView
             modelData.VertexCount = vertexCount1;
             modelData.TriCount = triCount1;
             modelData.SkinCount = skinCount1;
+            modelData.StripBones = importer.optimizeBones;
             modelData.BoneCount = importer.transformPaths.Length;
+            modelData.ImportAnimation = importer.importAnimation;
             modelData.AnimationType = importer.animationType;
             modelData.OptimizeGameObjects = importer.optimizeGameObjects;
             modelData.AnimCompression = importer.animationCompression;
             modelData.AnimationClipLength = clipLength1;
             modelData.IsLoop = isLoop1;
+            modelData.MaterialImportMode = importer.materialImportMode;
             // modelData.AnimationClipSize = RuleHelper.GetResSize<AnimationClip>(assetPath);
 
             m_DataMap[guid] = modelData;
@@ -254,14 +266,17 @@ namespace Game.Tool.AssetView
             MeshCount,
             VertexCount,
             TriCount,
+            StripBones,
             SkinCount,
             BoneCount,
+            ImportAnimation,
             AnimationType,
             OptimizeGameObjects,
             AnimCompression,
             AnimationClipLength,
             IsLoop,
             AnimationClipSize,
+            MaterialImportMode,
         }
 
         struct Data
@@ -277,17 +292,93 @@ namespace Game.Tool.AssetView
             public long TriCount;
             public int SkinCount;
             public int BoneCount;
-            public ModelImporterAnimationType AnimationType;
+            public bool StripBones;
             public bool OptimizeGameObjects;
+            public bool ImportAnimation;
+            public ModelImporterAnimationType AnimationType;
             public ModelImporterAnimationCompression AnimCompression;
             public float AnimationClipLength;
             public bool IsLoop;
             public long AnimationClipSize;
+            public ModelImporterMaterialImportMode MaterialImportMode;
         }
 
 
         public GenericMenu GetGenericMenu(int column)
         {
+            switch ((PropCols)column)
+            {
+                case PropCols.StripBones:
+                    {
+                        void AddsStripBonesGenericMenu(GenericMenu menu, bool stripBones)
+                        {
+                            void ChangesStripBones(bool stripBones)
+                            {
+                                void Do(string path)
+                                {
+                                    var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+                                    if (importer == null) return;
+
+                                    importer.optimizeBones = stripBones;
+                                    importer.SaveAndReimport();
+
+                                    var guid = AssetDatabase.AssetPathToGUID(path);
+                                    m_DataMap.TryGetValue(guid, out Data data);
+                                    data.StripBones = stripBones;
+                                    m_DataMap[guid] = data;
+                                };
+
+                                foreach (var treeItem in AssetView.SelectedItems)
+                                    Do(treeItem);
+
+                                AssetDatabase.Refresh();
+                            }
+
+                            menu.AddItem(new GUIContent(stripBones.ToString()), false, () => { ChangesStripBones(stripBones); });
+                        }
+
+                        GenericMenu menu = new GenericMenu();
+                        AddsStripBonesGenericMenu(menu, true);
+                        AddsStripBonesGenericMenu(menu, false);
+                        return menu;
+                    }
+                case PropCols.MaterialImportMode:
+                    {
+                        void AddsMaterialImportModeGenericMenu(GenericMenu menu, ModelImporterMaterialImportMode mode)
+                        {
+                            void ChangesMaterialImportMode(ModelImporterMaterialImportMode mode)
+                            {
+                                void Do(string path)
+                                {
+                                    var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+                                    if (importer == null) return;
+
+                                    importer.materialImportMode = mode;
+                                    importer.SaveAndReimport();
+
+                                    var guid = AssetDatabase.AssetPathToGUID(path);
+                                    m_DataMap.TryGetValue(guid, out Data data);
+                                    data.MaterialImportMode = mode;
+                                    m_DataMap[guid] = data;
+                                }
+
+                                foreach (var treeItem in AssetView.SelectedItems)
+                                    Do(treeItem);
+
+                                AssetDatabase.Refresh();
+                            }
+
+                            menu.AddItem(new GUIContent(mode.ToString()), false, () => { ChangesMaterialImportMode(mode); });
+                        }
+
+                        GenericMenu menu = new GenericMenu();
+                        AddsMaterialImportModeGenericMenu(menu, ModelImporterMaterialImportMode.None);
+                        AddsMaterialImportModeGenericMenu(menu, ModelImporterMaterialImportMode.ImportStandard);
+                        AddsMaterialImportModeGenericMenu(menu, ModelImporterMaterialImportMode.ImportViaMaterialDescription);
+                        return menu;
+                    }
+
+            }
             return null;
         }
     }

@@ -10,10 +10,12 @@ public class sRGBIssue : IIssueRule
     {
         //这只是一个测试实例
         var path = AssetDatabase.GUIDToAssetPath(guid);
-        var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-        if (importer.sRGBTexture)
+        if (AssetImporter.GetAtPath(path) is TextureImporter importer)
         {
-            return true;
+            if (importer.sRGBTexture)
+            {
+                return true;
+            }
         }
 
         return false;
